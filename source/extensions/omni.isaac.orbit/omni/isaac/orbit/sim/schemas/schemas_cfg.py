@@ -1,4 +1,4 @@
-# Copyright (c) 2022-2024, The ORBIT Project Developers.
+# Copyright (c) 2022-2023, The ORBIT Project Developers.
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -81,6 +81,8 @@ class RigidBodyPropertiesCfg:
     stabilization_threshold: float | None = None
     """The mass-normalized kinetic energy threshold below which an actor may participate in stabilization."""
 
+# @configclass
+# class SoftBodyPropertiesCfg:
 
 @configclass
 class CollisionPropertiesCfg:

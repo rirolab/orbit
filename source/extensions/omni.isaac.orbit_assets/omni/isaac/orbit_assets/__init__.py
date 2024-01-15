@@ -1,4 +1,4 @@
-# Copyright (c) 2022-2024, The ORBIT Project Developers.
+# Copyright (c) 2022-2023, The ORBIT Project Developers.
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -23,6 +23,8 @@ ORBIT_ASSETS_DATA_DIR = os.path.join(ORBIT_ASSETS_EXT_DIR, "data")
 ORBIT_ASSETS_METADATA = toml.load(os.path.join(ORBIT_ASSETS_EXT_DIR, "config", "extension.toml"))
 """Extension metadata dictionary parsed from the extension.toml file."""
 
+LOCAL_ASSETS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "usd"))
+
 # Configure the module-level variables
 __version__ = ORBIT_ASSETS_METADATA["package"]["version"]
 
@@ -34,6 +36,7 @@ __version__ = ORBIT_ASSETS_METADATA["package"]["version"]
 from .anymal import *
 from .cartpole import *
 from .franka import *
+from .franka_gripper import *
 from .ridgeback_franka import *
 from .unitree import *
 from .universal_robots import *

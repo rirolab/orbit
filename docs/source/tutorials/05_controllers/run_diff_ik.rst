@@ -16,8 +16,7 @@ end-effector pose command.
 The Code
 ~~~~~~~~
 
-The tutorial corresponds to the ``run_diff_ik.py`` script in the
-``orbit/source/standalone/tutorials/05_controllers`` directory.
+The tutorial corresponds to the ``run_diff_ik.py`` script in the ``orbit/source/standalone/demo`` directory.
 
 
 .. dropdown:: Code for run_diff_ik.py

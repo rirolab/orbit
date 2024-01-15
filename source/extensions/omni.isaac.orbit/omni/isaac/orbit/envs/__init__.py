@@ -1,4 +1,4 @@
-# Copyright (c) 2022-2024, The ORBIT Project Developers.
+# Copyright (c) 2022-2023, The ORBIT Project Developers.
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -26,3 +26,7 @@ from .base_env import BaseEnv, VecEnvObs
 from .base_env_cfg import BaseEnvCfg, ViewerCfg
 from .rl_task_env import RLTaskEnv, VecEnvStepReturn
 from .rl_task_env_cfg import RLTaskEnvCfg
+
+# Add class for deformable manipulation
+from .do_rl_task_env import RLDOTaskEnv, VecDoEnvStepReturn
+from .do_rl_task_env_cfg import RLDOTaskEnvCfg

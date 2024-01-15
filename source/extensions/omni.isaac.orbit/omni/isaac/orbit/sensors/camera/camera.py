@@ -1,10 +1,10 @@
-# Copyright (c) 2022-2024, The ORBIT Project Developers.
+# Copyright (c) 2022-2023, The ORBIT Project Developers.
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
 from __future__ import annotations
-
+import random
 import math
 import numpy as np
 import re
@@ -45,7 +45,11 @@ class Camera(SensorBase):
     - ``"normals"``: An image containing the local surface normal vectors at each pixel.
     - ``"motion_vectors"``: An image containing the motion vector data at each pixel.
     - ``"instance_segmentation"``: The instance segmentation data.
-    - ``"semantic_segmentation"``: The semantic segmentation data.
+    - ``"instance_segmentation"``: The instance segmentation data.
+    
+    + For Deformable O-Ring Manipulation 
+    - ``"pointcloud"``: Get 2D array of shape (N, 3) representing the points sampled on the surface of the prims in the viewport.
+    
 
     .. note::
         Currently the following sensor types are not supported in a "view" format:
@@ -397,6 +401,7 @@ class Camera(SensorBase):
                     init_params = {"colorize": self.cfg.colorize}
                 else:
                     init_params = None
+
                 # create annotator node
                 rep_annotator = rep.AnnotatorRegistry.get_annotator(name, init_params, device=device_name)
                 rep_annotator.attach(render_prod_path)
@@ -421,16 +426,49 @@ class Camera(SensorBase):
         else:
             # iterate over all the data types
             for name, annotators in self._rep_registry.items():
+                if name == 'pointcloud':
+                    for index in env_ids:
+                        # get number of segmentation label from 'sementic_segmentation'
+                        sementic_idToLabels = self._rep_registry.get("semantic_segmentation")[index].get_data()["info"]["idToLabels"]
+                        segment_name = {self.cfg.semantic_types[index]: self.cfg.semantic_labels[index]}
+                        
+                        # get id of segmentation label
+
+                        # get the output
+                        output = annotators[index].get_data()
+                        # process the output
+                        data, info = self._process_annotator_output(output)
+                        if segment_name in sementic_idToLabels.values():
+                            self.segment_idx = int(self._find_value(sementic_idToLabels, segment_name))
+                        indices = torch.tensor([idx for idx, value in enumerate(info["pointSemantic"]) if value == self.segment_idx])
+                        if self.seg_pcd_len != len(indices):
+                            seg_data = torch.zeros(self._data.output[name][index].shape)
+                            if self.seg_pcd_len > len(indices):
+                                if len(indices) != 0:
+                                    seg_data[:len(indices)] = data[indices]
+                            else:
+                                rand_indices = torch.tensor(random.choices(indices, k = len(self._data.output[name][index])))
+                                seg_data = data[rand_indices]
+                        else:
+                            seg_data = data[indices]
+
+                        # add data to output
+                        self._data.output[name][index] = seg_data
+                        
+                        # add info to output
+                        self._data.info[index][name] = info
+
+                else:
                 # iterate over all the annotators
-                for index in env_ids:
-                    # get the output
-                    output = annotators[index].get_data()
-                    # process the output
-                    data, info = self._process_annotator_output(output)
-                    # add data to output
-                    self._data.output[name][index] = data
-                    # add info to output
-                    self._data.info[index][name] = info
+                    for index in env_ids:
+                        # get the output
+                        output = annotators[index].get_data()
+                        # process the output
+                        data, info = self._process_annotator_output(output)
+                        # add data to output
+                        self._data.output[name][index] = data
+                        # add info to output
+                        self._data.info[index][name] = info
 
     """
     Private Helpers
@@ -525,18 +563,58 @@ class Camera(SensorBase):
         for name, annotators in self._rep_registry.items():
             # create a list to store the data for each annotator
             data_all_cameras = list()
-            # iterate over all the annotators
-            for index in self._ALL_INDICES:
-                # get the output
-                output = annotators[index].get_data()
-                # process the output
-                data, info = self._process_annotator_output(output)
-                # append the data
-                data_all_cameras.append(data)
-                # store the info
-                self._data.info[index][name] = info
-            # concatenate the data along the batch dimension
-            self._data.output[name] = torch.stack(data_all_cameras, dim=0)
+            if name == "pointcloud":
+                if "semantic_segmentation" not in self.cfg.data_types:
+                    raise RuntimeError(
+                        "If you want to use segmenation partially pointcloud, Add semantic segmentation"
+                        "\n\tHint: Please Add data_types [semantic_segmentation] and semantic_labels [Cube]."
+                    )
+                # iterate over all the annotators
+                for index in self._ALL_INDICES:
+                    # get number of segmentation label from 'sementic_segmentation'
+                    sementic_idToLabels = self._rep_registry.get("semantic_segmentation")[index].get_data()["info"]["idToLabels"]
+                    segment_name = {self.cfg.semantic_types[index]: self.cfg.semantic_labels[index]}
+                    
+                    # get id of segmentation label
+                    if segment_name in sementic_idToLabels.values():
+                        self.segment_idx = int(self._find_value(sementic_idToLabels, segment_name))
+                    else: 
+                        raise RuntimeError(
+                            "Not exist segmentic labels of objects."
+                            "\n\tHint: Please check exist {'semantic_types':'sementic_labels'} object."
+                        )
+                    # get the output
+                    output = annotators[index].get_data()
+                    # process the output
+                    data, info = self._process_annotator_output(output)
+                    # append the data
+                    # data_all_cameras.append([0])
+                    
+                    # append segmented object pcd
+                    # info["pointSemantic"]
+                    indices = torch.tensor([idx for idx, value in enumerate(info["pointSemantic"]) if value == self.segment_idx])
+                    # print("check")
+                    seg_pcd = data[indices]
+                    self.seg_pcd_len = len(indices)
+                    data_all_cameras.append(seg_pcd)
+                    
+                    # store the info
+                    self._data.info[index][name] = info
+                # concatenate the data along the batch dimension
+                self._data.output[name] = torch.stack(data_all_cameras, dim=0)
+            else:
+                # iterate over all the annotators
+                for index in self._ALL_INDICES:
+                    # get the output
+                    output = annotators[index].get_data()
+                    # process the output
+                    data, info = self._process_annotator_output(output)
+                    # append the data
+                    data_all_cameras.append(data)
+                    # store the info
+                    self._data.info[index][name] = info
+                # concatenate the data along the batch dimension
+                self._data.output[name] = torch.stack(data_all_cameras, dim=0)
 
     def _process_annotator_output(self, output: Any) -> tuple[torch.tensor, dict]:
         """Process the annotator output.
@@ -565,3 +643,16 @@ class Camera(SensorBase):
         super()._invalidate_initialize_callback(event)
         # set all existing views to None to invalidate them
         self._view = None
+
+
+    """
+    Internal functions 
+    """
+        
+    # def _reverse_dict(self, dictionary):
+    #     return dict(map(reversed, dictionary.items()))
+    
+    def _find_value(self, dictionary, finding_value):
+        for key, value in dictionary.items():
+            if value == finding_value:
+                return key

@@ -1,4 +1,4 @@
-# Copyright (c) 2022-2024, The ORBIT Project Developers.
+# Copyright (c) 2022-2023, The ORBIT Project Developers.
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -74,6 +74,13 @@ class CameraCfg(SensorBaseCfg):
         https://docs.omniverse.nvidia.com/extensions/latest/ext_replicator/semantics_schema_editor.html#semantics-filtering
     """
 
+    semantic_labels: list[str] = ["cube"]
+    """List of allowed semantic types the lables in pointcloud.
+
+    For example, if semantic types is ["cube”],
+    only the bounding boxes for prims with semantics of lable of "cube" object will be retrieved.
+    """
+
     colorize: bool = False
     """whether to output colorized semantic information or non-colorized one. Defaults to False.
 
@@ -83,3 +90,4 @@ class CameraCfg(SensorBaseCfg):
     If False, the semantic images will be a 2D array of integers, where each pixel is an integer representing
     the semantic ID. Accordingly, the information output will contain mapping from semantic ID to semantic labels.
     """
+

@@ -1,4 +1,4 @@
-# Copyright (c) 2022-2024, The ORBIT Project Developers.
+# Copyright (c) 2022-2023, The ORBIT Project Developers.
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -12,7 +12,7 @@ import logging
 from omni.isaac.kit import SimulationApp
 
 # launch the simulator
-config = {"headless": True}
+config = {"headless": False}
 simulation_app = SimulationApp(config)
 
 # disable matplotlib debug messages

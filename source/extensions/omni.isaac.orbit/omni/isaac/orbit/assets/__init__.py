@@ -1,4 +1,4 @@
-# Copyright (c) 2022-2024, The ORBIT Project Developers.
+# Copyright (c) 2022-2023, The ORBIT Project Developers.
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -42,3 +42,4 @@ from .articulation import Articulation, ArticulationCfg, ArticulationData
 from .asset_base import AssetBase
 from .asset_base_cfg import AssetBaseCfg
 from .rigid_object import RigidObject, RigidObjectCfg, RigidObjectData
+from .soft_object import SoftObject, SoftObjectCfg, SoftObjectData
