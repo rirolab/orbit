@@ -150,13 +150,22 @@ class RandomizationCfg:
 
     reset_all = RandTerm(func=mdp.reset_scene_to_default, mode="reset")
 
-    reset_object_position = RandTerm(
-        func=mdp.reset_root_state_uniform,
+    randomize_deform_body_parameter = RandTerm(
+        func=mdp.randomize_deform_body_parameter,
         mode="reset",
         params={
-            "pose_range": {"x": (-0.1, 0.1), "y": (-0.25, 0.25), "z": (0.0, 0.0)},
-            "velocity_range": {},
+            "stiffness": {min: 0.1, max: 0.1}, #FIXME
+            "youngs": {min: 0.1, max: 0.1}, #FIXME
             "asset_cfg": SceneEntityCfg("object", body_names="Object"),
+        },
+    )
+    
+    randomize_aux_pole_position = RandTerm(
+        func=mdp.randomize_aux_pole_position,
+        mode="reset",
+        params={
+            "position": {min: 0.1, max: 0.1}, #FIXME
+            "asset_cfg": SceneEntityCfg("aux_pole"),
         },
     )
 
@@ -169,16 +178,16 @@ class RewardsCfg:
 
     lifting_object = RewTerm(func=mdp.object_is_lifted, params={"minimal_height": 0.06}, weight=15.0)
 
-    object_goal_tracking = RewTerm(
-        func=mdp.object_goal_distance,
-        params={"std": 0.3, "minimal_height": 0.06, "command_name": "object_pose"},
-        weight=16.0,
+    ee_goal_distance = RewTerm(
+        func=mdp.ee_goal_distance,
+        params={}, #FIXME
+        weight=5.0,
     )
 
-    object_goal_tracking_fine_grained = RewTerm(
-        func=mdp.object_goal_distance,
-        params={"std": 0.05, "minimal_height": 0.06, "command_name": "object_pose"},
-        weight=5.0,
+    object_chamfer_distance = RewTerm(
+        func=mdp.object_chamfer_distance,
+        params={}, #FIXME
+        weight=1.0,
     )
 
     # action penalty
@@ -195,7 +204,7 @@ class RewardsCfg:
 class TerminationsCfg:
     """Termination terms for the MDP."""
 
-    time_out = DoneTerm(func=mdp.time_out, time_out=True)
+    time_out = DoneTerm(func=mdp.time_out, time_out=True) #FIXME: mdp.time_out
 
     object_dropping = DoneTerm( #FIXME: Remove?
         func=mdp.base_height, params={"minimum_height": -0.05, "asset_cfg": SceneEntityCfg("object")}
@@ -206,7 +215,7 @@ class TerminationsCfg:
 class CurriculumCfg:
     """Curriculum terms for the MDP."""
 
-    FIXME:
+    #FIXME:
     action_rate = CurrTerm(
         func=mdp.modify_reward_weight, params={"term_name": "action_rate", "weight": -1e-1, "num_steps": 10000}
     )
